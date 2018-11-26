@@ -18,12 +18,18 @@
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\..\OneDrive\Dokumenty\Studia\AISDI\AISDI_cw_18Z\Desktop_Lab011\Liniowe\src\LinkedList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\OneDrive\Dokumenty\Studia\AISDI\AISDI_cw_18Z\Desktop_Lab011\Liniowe\src\Vector.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="linear_structures.cpp">
+    <ClCompile Include="..\..\..\..\OneDrive\Dokumenty\Studia\AISDI\AISDI_cw_18Z\Desktop_Lab011\Liniowe\src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -151,10 +151,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\..\OneDrive\Dokumenty\Studia\AISDI\AISDI_cw_18Z\Desktop_Lab011\Liniowe\src\LinkedList.h" />
+    <ClInclude Include="..\..\..\..\OneDrive\Dokumenty\Studia\AISDI\AISDI_cw_18Z\Desktop_Lab011\Liniowe\src\Vector.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="linear_structures.cpp" />
+    <ClCompile Include="..\..\..\..\OneDrive\Dokumenty\Studia\AISDI\AISDI_cw_18Z\Desktop_Lab011\Liniowe\src\main.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
