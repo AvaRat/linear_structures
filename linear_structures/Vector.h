@@ -7,6 +7,7 @@
 #include <initializer_list>
 #include <stdexcept>
 #include <cmath>
+#include <iterator>
 
 namespace aisdi
 {
@@ -23,8 +24,10 @@ namespace aisdi
 		using reference = Type & ;
 		using const_pointer = const Type*;
 		using const_reference = const Type&;
+
 		class ConstIterator;
 		class Iterator;
+
 		using iterator = Iterator;
 		using const_iterator = ConstIterator;
 
@@ -39,7 +42,6 @@ namespace aisdi
 	public:
 		Vector()
 		{
-			std::cout << "default Vector constructor\n";
 			v_capacity = object_size * 20;
 			v_buffer = new object_type[20];
 			object_size = sizeof(object_type);
@@ -49,17 +51,19 @@ namespace aisdi
 		//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		Vector(std::initializer_list<Type> init)
 		{
+			object_size = sizeof(object_type);
+			object_count = init.size();
+			v_size = object_count * object_size;
+			v_capacity = object_count * object_size + 20 * object_size;
+
 			auto *tmp = init.begin();
 			size_type i = 1;
-			v_buffer = new object_type[init.size() + 20 * object_size];
-
+			v_buffer = new object_type[object_count * object_size + 20*object_size];
+			for (i = 0; i < init.size(); ++i, ++tmp)
+			{
 				v_buffer[i] = *tmp;
+			}
 
-				object_size = sizeof(object_type);
-				object_count = i;
-				v_capacity = init.size() + 20 * object_size;
-
-		//	std::cout << "copied " << i << " elements\n";
 			(void)init; // disables "unused argument" warning, can be removed when method is implemented.
 		//	throw std::runtime_error("TODO");
 		}
@@ -68,7 +72,7 @@ namespace aisdi
 		{
 			v_buffer = new object_type[other.v_capacity];
 			v_capacity = other.v_capacity;
-			for (size_t i = 0; i < v_capacity; ++i)
+			for (size_t i = 0; i < other.object_count; ++i)
 			{
 				v_buffer[i] = other.v_buffer[i];
 			}
@@ -89,7 +93,6 @@ namespace aisdi
 		~Vector()
 		{
 			delete[] v_buffer;
-			std::cout << "default Vector destructor\n";
 		}
 
 		Vector& operator=(const Vector& other)
@@ -155,7 +158,7 @@ namespace aisdi
 			v_capacity = capac;
 			delete[] v_buffer;
 			v_buffer = newBuff;
-			std::cout << "reserving space\n";
+		//	std::cout << "reserving space\n";
 		}
 
 		void append(const Type& item)
@@ -169,27 +172,46 @@ namespace aisdi
 		//	throw std::runtime_error("TODO");
 		}
 
-		void prepend(const Type& item)
+		void prepend(const Type& item , difference_type where = 0)
 		{
 			object_type *newBuff = new object_type[v_capacity + object_size];
 
-			for (size_type i = 1; i < object_count; ++i)
+			for (size_type i = 1; i <= object_count; ++i)
 			{
 				newBuff[i] = v_buffer[i-1];
 			}
-				newBuff[0] = item;
-				delete[] v_buffer;
-				v_buffer = newBuff;
+			++object_count;
+			newBuff[where] = item;
+			delete[] v_buffer;
+			v_buffer = newBuff;
+			v_capacity += object_size;
+			v_size += object_size;
 			
 			(void)item;
 	//		throw std::runtime_error("TODO");
 		}
 
-		void insert(const const_iterator& insertPosition, const Type& item)
+		void insert(const const_iterator& insert_position, const Type& item)
 		{
-			(void)insertPosition;
+			if(v_size + object_size >= v_capacity)
+				reserve(v_capacity * 2 + 10 * object_size);
+
+			const_iterator tmp = --(this->end());
+			size_type i;
+		//	std::swap_ranges(insertPosition, last_el, insertPosition);
+			for (i = object_count-1;  tmp != insert_position;  --tmp, --i)
+			{
+			//	std::cout << v_buffer[i] << std::endl;
+				v_buffer[i + 1] = v_buffer[i];
+			}
+			
+			v_buffer[i+1] = item;
+			++object_count;
+			v_size += object_size;
+
+			(void)insert_position;
 			(void)item;
-			throw std::runtime_error("TODO");
+		//	throw std::runtime_error("TODO");
 		}
 
 		Type popFirst()
@@ -202,14 +224,17 @@ namespace aisdi
 		{
 			/*this->_M_impl._M_finish;
 	_Alloc_traits::destroy(this->_M_impl, this->_M_impl._M_finish);*/
+			--object_count;
+			v_size -= object_size;
 			return v_buffer[object_count-1];
 			throw std::runtime_error("TODO");
 		}
 
 		void erase(const const_iterator& possition)
 		{
+
 			(void)possition;
-			throw std::runtime_error("TODO");
+			//throw std::runtime_error("TODO");
 		}
 
 		void erase(const const_iterator& firstIncluded, const const_iterator& lastExcluded)
@@ -221,109 +246,156 @@ namespace aisdi
 
 		iterator begin()
 		{
-		//	return iterator(this-> first_element)	
+		//	Vector<object_type>::Iterator
+			return iterator(&v_buffer[0]);
 			throw std::runtime_error("TODO");
 		}
 
 		iterator end()
 		{
-			//	return iterator(this-> last_element)
+			return(iterator(&v_buffer[object_count]));
 			throw std::runtime_error("TODO");
 		}
 
 		const_iterator cbegin() const
 		{
-			//	return ConstIterator(this-> first_element)
+			return const_iterator(&v_buffer[0]);
 			throw std::runtime_error("TODO");
 		}
 
 		const_iterator cend() const
 		{
-			//	return ConstIterator(this-> last_element)
+			return(const_iterator(&v_buffer[object_count]));
 			throw std::runtime_error("TODO");
 		}
 
 		const_iterator begin() const
 		{
+		//	return const_iterator(&v_buffer[0]);
 			//	return ConstIterator(this-> first_element)	
 			return cbegin();
 		}
 
 		const_iterator end() const
 		{
-			//	return ConstIterator(this-> last_element)
+		//	return const_iterator(&v_buffer[object_count]);
 			return cend();
 		}
 	};
 
 	template <typename Type>
-	class Vector<Type>::ConstIterator
+	class Vector<Type>::ConstIterator: public std::iterator<std::random_access_iterator_tag, object_type>
 	{
 	public:
 		using iterator_category = std::bidirectional_iterator_tag;
-		using value_type = typename Vector::value_type;
+		using object_type = typename Vector::object_type;
 		using difference_type = typename Vector::difference_type;
 		using pointer = typename Vector::const_pointer;
 		using reference = typename Vector::const_reference;
+		using ptr = typename Vector::pointer;
 	private:
-		/*		difference_type pointer_difference;
-		size_t object_size;
-		value_type object;
-		pointer object_pointer;
-		reference object_reference;*/
+		object_type *object_ptr;
 
 	public:
-		explicit ConstIterator()
+
+		explicit ConstIterator() : object_ptr()
 		{
-			std::cout << "default (explicit) ConstIterator constructor\n";
 		}
 
+		ConstIterator(ptr data): object_ptr(data) // &data -> *int
+		{
+		}
 
 		reference operator*() const
 		{
+			return *object_ptr;
 			throw std::runtime_error("TODO");
 		}
 
 		ConstIterator& operator++()
 		{
+			++object_ptr;
+			return (*this);
 			throw std::runtime_error("TODO");
 		}
 
 		ConstIterator operator++(int)
 		{
+			ConstIterator tmp = *this;
+			++*this;
+			return tmp;
 			throw std::runtime_error("TODO");
 		}
 
 		ConstIterator& operator--()
 		{
+			--object_ptr;
+			return(*this);
 			throw std::runtime_error("TODO");
 		}
 
 		ConstIterator operator--(int)
 		{
+			ConstIterator tmp = *this;
+			--*this;
+			return tmp;
 			throw std::runtime_error("TODO");
 		}
 
-		ConstIterator operator+(difference_type d) const
+		// TODO
+		void check_offset(const difference_type off)
 		{
-			(void)d;
+		}
+		
+		ConstIterator& operator+=(const difference_type off)
+		{
+			check_offset(off);
+			object_ptr += off;
+			return *this;
+		}
+
+		ConstIterator operator+(difference_type off) const
+		{
+			ConstIterator tmp = *this;
+			return tmp += off;
+			(void)off;
 			throw std::runtime_error("TODO");
 		}
 
-		ConstIterator operator-(difference_type d) const
+		reference operator[](const difference_type off)
+
 		{
-			(void)d;
+			return (*(*this + off));
+		}
+
+		ConstIterator& operator-=(const difference_type off)
+		{
+			return (*this += -off);
+		}
+
+		ConstIterator operator-(const difference_type off) const
+		{
+			ConstIterator tmp = *this;
+			return (tmp -= off);
+			(void)off;
 			throw std::runtime_error("TODO");
+		}
+
+		difference_type operator-(const ConstIterator& other) const
+		{
+			return (object_ptr - other.object_ptr);
 		}
 
 		bool operator==(const ConstIterator& other) const
 		{
+			return (object_ptr == other.object_ptr);
 			(void)other;
 			throw std::runtime_error("TODO");
 		}
 
 		bool operator!=(const ConstIterator& other) const
 		{
+			return (!(*this == other));
 			(void)other;
 			throw std::runtime_error("TODO");
 		}
@@ -335,16 +407,27 @@ namespace aisdi
 	public:
 		using pointer = typename Vector::pointer;
 		using reference = typename Vector::reference;
+		using difference_type = typename Vector::difference_type;
 
 		explicit Iterator()
 		{
-			std::cout << "default (explicit) Iterator constructor\n";
+		//	std::cout << "default (explicit) Iterator constructor\n";
+		}
+		explicit Iterator(pointer data) : ConstIterator(data)
+		{
+		//	std::cout << "from data (explicit) Iterator constructor\n";
 		}
 
 		Iterator(const ConstIterator& other)
 			: ConstIterator(other)
 		{
 			
+		}
+
+		reference operator*() const
+		{
+			// ugly cast, yet reduces code duplication.
+			return (const_cast<reference>(ConstIterator::operator*()));
 		}
 
 		Iterator& operator++()
@@ -378,16 +461,35 @@ namespace aisdi
 			return ConstIterator::operator+(d);
 		}
 
+		Iterator& operator+=(const difference_type off)
+		{
+			*(ConstIterator *)this += off;
+			return *this;
+		}
+
+
+		reference operator[](const difference_type off) const
+		{
+		//	return ConstIterator::operator*[off];
+			return (*(*this + off));
+		}
+
 		Iterator operator-(difference_type d) const
 		{
 			return ConstIterator::operator-(d);
 		}
 
-		reference operator*() const
+		Iterator& operator-=(const difference_type off)
 		{
-			// ugly cast, yet reduces code duplication.
-			return const_cast<reference>(ConstIterator::operator*());
+			return (*this += -off);
 		}
+
+		
+		difference_type operator-(const ConstIterator& other) const
+		{	// return difference of iterators
+			return (*(ConstIterator *)this - other);
+		}
+		
 	};
 
 }
