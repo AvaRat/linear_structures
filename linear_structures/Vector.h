@@ -85,9 +85,14 @@ namespace aisdi
 		}
 
 		Vector(Vector&& other)
+			: v_buffer{ std::exchange(other.v_buffer, nullptr) }
+			, v_capacity{std::exchange(other.v_capacity, 0)}
+			, v_size{std::exchange(other.v_size, 0)}
+			, object_size{std::exchange(other.object_size, 0)}
+			, object_count{std::exchange(other.object_count, 0)}
 		{
 			(void)other;
-			throw std::runtime_error("TODO");
+		//	throw std::runtime_error("TODO");
 		}
 
 		~Vector()
@@ -97,12 +102,37 @@ namespace aisdi
 
 		Vector& operator=(const Vector& other)
 		{
+			if ((*this).begin() == other.begin())
+				return *this;
+			std::cout << "single reference\n";
+			v_buffer = new object_type[other.v_capacity];
+			v_capacity = other.v_capacity;
+			for (size_t i = 0; i < other.object_count; ++i)
+			{
+				v_buffer[i] = other.v_buffer[i];
+			}
+			v_size = other.v_size;
+			object_size = other.object_size;
+			object_count = other.object_count;
+			return (*this);
 			(void)other;
 			throw std::runtime_error("TODO");
 		}
 
 		Vector& operator=(Vector&& other)
 		{
+			if ((*this).begin() == other.begin())
+				return *this;
+			for (size_t i = 0; i < other.object_count; ++i)
+			{
+				v_buffer[i] = other.v_buffer[i];
+			}
+			v_buffer = std::exchange(other.v_buffer, nullptr);
+			v_capacity = std::exchange(other.v_capacity, 0);
+			v_size = std::exchange(other.v_size, 0);
+			object_size = std::exchange(other.object_size, 0);
+			object_count = std::exchange(other.object_count, 0);
+			return *this;
 			(void)other;
 			throw std::runtime_error("TODO");
 		}
@@ -118,7 +148,7 @@ namespace aisdi
 
 		size_type getSize() const
 		{
-			return v_size;
+			return object_count;
 			throw std::runtime_error("TODO");
 		}
 
@@ -196,19 +226,23 @@ namespace aisdi
 			if(v_size + object_size >= v_capacity)
 				reserve(v_capacity * 2 + 10 * object_size);
 
-			const_iterator tmp = --(this->end());
-			size_type i;
-		//	std::swap_ranges(insertPosition, last_el, insertPosition);
-			for (i = object_count-1;  tmp != insert_position;  --tmp, --i)
+			if (object_count == 0)
 			{
-			//	std::cout << v_buffer[i] << std::endl;
-				v_buffer[i + 1] = v_buffer[i];
+				this->append(item);
+				return;
 			}
+
 			
-			v_buffer[i+1] = item;
+			iterator tmp = (this->end());
+		//	iterator tmp = insert_position;
+			size_t i = object_count;
+			for(; tmp != insert_position; --i, --tmp)
+			{
+				v_buffer[i] = v_buffer[i-1];
+			}
+			v_buffer[i] = item;
 			++object_count;
 			v_size += object_size;
-
 			(void)insert_position;
 			(void)item;
 		//	throw std::runtime_error("TODO");
@@ -216,7 +250,17 @@ namespace aisdi
 
 		Type popFirst()
 		{
-			return v_buffer[0];
+			object_type object_wanted = v_buffer[0];
+			iterator last = --(this->end());
+			iterator tmp = this->begin();
+			for (; tmp != last; ++tmp)
+			{
+				//	std::cout << v_buffer[i] << std::endl;
+				*(tmp) = *(tmp + 1);
+			}
+			--object_count;
+			v_size -= object_size;
+			return object_wanted;
 			throw std::runtime_error("TODO");
 		}
 
@@ -224,48 +268,79 @@ namespace aisdi
 		{
 			/*this->_M_impl._M_finish;
 	_Alloc_traits::destroy(this->_M_impl, this->_M_impl._M_finish);*/
-			--object_count;
+			if (this->isEmpty())
+				throw std::logic_error("no elements in this vector\n");
+
 			v_size -= object_size;
-			return v_buffer[object_count-1];
+			return v_buffer[--object_count];
 			throw std::runtime_error("TODO");
 		}
 
 		void erase(const const_iterator& possition)
 		{
+			if (possition == this->begin())
+			{
+				this->popFirst();
+				return;
+			}
+			if (possition == this->end())
+				throw std::out_of_range("there's no item at the end\n");
+		
+			iterator tmp = --(this->end());
+			//	iterator tmp = insert_position;
+			size_t i = object_count;
+			for (; tmp != possition; --i, --tmp)
+			{
+				*(tmp - 1) = *tmp;
+			}
 
+			--object_count;
+			v_size -= object_size;
 			(void)possition;
-			//throw std::runtime_error("TODO");
+		//	throw std::runtime_error("TODO");
 		}
 
 		void erase(const const_iterator& firstIncluded, const const_iterator& lastExcluded)
 		{
-			(void)firstIncluded;
-			(void)lastExcluded;
-			throw std::runtime_error("TODO");
+			if (firstIncluded == lastExcluded)
+				return;
+			iterator left = firstIncluded;
+			iterator right = lastExcluded;
+			for ( ;  left < this->end();  ++right, ++left)
+			{
+				if (right == this->end())
+					break;
+				*left = *right;
+			}
+			size_type amount = (lastExcluded - firstIncluded);
+			object_count -= amount;
+			v_size -= amount * object_size;
+
+		//	throw std::runtime_error("TODO");
 		}
 
 		iterator begin()
 		{
 		//	Vector<object_type>::Iterator
-			return iterator(&v_buffer[0]);
+			return iterator(&v_buffer[0], &v_buffer[0], &v_buffer[object_count]);
 			throw std::runtime_error("TODO");
 		}
 
 		iterator end()
 		{
-			return(iterator(&v_buffer[object_count]));
+			return iterator(&v_buffer[object_count], &v_buffer[0], &v_buffer[object_count]);
 			throw std::runtime_error("TODO");
 		}
 
 		const_iterator cbegin() const
 		{
-			return const_iterator(&v_buffer[0]);
+			return const_iterator(&v_buffer[0], &v_buffer[0], &v_buffer[object_count]);
 			throw std::runtime_error("TODO");
 		}
 
 		const_iterator cend() const
 		{
-			return(const_iterator(&v_buffer[object_count]));
+			return const_iterator(&v_buffer[object_count], &v_buffer[0], &v_buffer[object_count]);
 			throw std::runtime_error("TODO");
 		}
 
@@ -295,32 +370,39 @@ namespace aisdi
 		using ptr = typename Vector::pointer;
 	private:
 		object_type *object_ptr;
-
+		pointer first;
+		pointer last;
 	public:
 
-		explicit ConstIterator() : object_ptr()
+		explicit ConstIterator() : object_ptr(), first(), last()
 		{
 		}
 
-		ConstIterator(ptr data): object_ptr(data) // &data -> *int
-		{
-		}
+		ConstIterator(ptr data, pointer first, pointer last): object_ptr(data), first(first), last(last)
+		{}
 
 		reference operator*() const
 		{
+			if (this->object_ptr == last)
+				throw std::out_of_range("cannot decrement, iterator is pointing first element\n");
 			return *object_ptr;
 			throw std::runtime_error("TODO");
 		}
 
 		ConstIterator& operator++()
 		{
+			if (this->object_ptr == last)
+				throw std::out_of_range("cannot decrement, iterator is pointing first element\n");
 			++object_ptr;
 			return (*this);
 			throw std::runtime_error("TODO");
 		}
 
+
 		ConstIterator operator++(int)
 		{
+			if (this->object_ptr == last)
+				throw std::out_of_range("cannot decrement, iterator is pointing first element\n");
 			ConstIterator tmp = *this;
 			++*this;
 			return tmp;
@@ -329,6 +411,8 @@ namespace aisdi
 
 		ConstIterator& operator--()
 		{
+			if (this->object_ptr == first)
+				throw std::out_of_range("cannot decrement, iterator is pointing first element\n");
 			--object_ptr;
 			return(*this);
 			throw std::runtime_error("TODO");
@@ -336,26 +420,30 @@ namespace aisdi
 
 		ConstIterator operator--(int)
 		{
+			if (this->object_ptr == first)
+				throw std::out_of_range("cannot decrement, iterator is pointing first element\n");
 			ConstIterator tmp = *this;
 			--*this;
 			return tmp;
 			throw std::runtime_error("TODO");
 		}
-
-		// TODO
-		void check_offset(const difference_type off)
-		{
-		}
 		
 		ConstIterator& operator+=(const difference_type off)
 		{
-			check_offset(off);
+/*
+			if (*this->last < (*this->object_ptr) + off)
+				throw std::out_of_range("out of range of this vector\n");
+*/
 			object_ptr += off;
 			return *this;
 		}
 
 		ConstIterator operator+(difference_type off) const
 		{
+/*
+			if (*this->last < (*this->object_ptr) + off)
+				throw std::out_of_range("out of range of this vector\n");
+*/
 			ConstIterator tmp = *this;
 			return tmp += off;
 			(void)off;
@@ -370,11 +458,18 @@ namespace aisdi
 
 		ConstIterator& operator-=(const difference_type off)
 		{
+/*
+			if (*this->first > (*this->object_ptr) - off)
+				throw std::out_of_range("out of range of this vector\n");
+*/
 			return (*this += -off);
 		}
 
 		ConstIterator operator-(const difference_type off) const
 		{
+/*			if (*this->first > (*this->object_ptr) - off)
+				throw std::out_of_range("out of range of this vector\n");
+*/
 			ConstIterator tmp = *this;
 			return (tmp -= off);
 			(void)off;
@@ -399,6 +494,17 @@ namespace aisdi
 			(void)other;
 			throw std::runtime_error("TODO");
 		}
+
+		bool operator<(const ConstIterator &other) const
+		{
+			return(object_ptr < other.object_ptr);
+		}
+
+		bool operator>(const ConstIterator &other) const
+		{
+			return(object_ptr > other.object_ptr);
+		}
+
 	};
 
 	template <typename Type>
@@ -413,7 +519,7 @@ namespace aisdi
 		{
 		//	std::cout << "default (explicit) Iterator constructor\n";
 		}
-		explicit Iterator(pointer data) : ConstIterator(data)
+		explicit Iterator(pointer data, pointer first, pointer last) : ConstIterator(data, first, last)
 		{
 		//	std::cout << "from data (explicit) Iterator constructor\n";
 		}
