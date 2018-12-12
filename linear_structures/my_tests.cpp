@@ -9,8 +9,15 @@
 #include <algorithm>
 #include <fstream>
 #include <utility>
+#include <list>
+
+#define _CRTDBG_MAP_ALLOC
+#include <stdlib.h>
+#include <crtdbg.h>
 
 #include "Vector.h"
+#include "LinkedList.h"
+
 
 
 //#ifdef NOT_TEST
@@ -53,27 +60,29 @@ public:
 
 int main(int argc, char** argv)
 {
-//timer
-	
-	tester einz(1, 2.543, "marcel");
-	tester zwei(2, 10.543, "kalinski");
-	tester drei(3, 1248921.5413433, "liczba");
-/*
-	Vector<tester> std_vec = { einz, zwei, drei};
-	Vector<tester>::Iterator it = std_vec.begin();
-	Vector<tester> sec_vec = { zwei, einz, drei };
-	Vector<tester>::Iterator it2;
-*/	
-	Vector<int> vec = { 1,5,10,50,150,27,24,5432,235,6432 };
-	Vector<int>::iterator it = vec.begin() + 2;
-	Vector<int>::iterator it2 = it + 1;
 
-	Vector<int> v = { 9,9,9,9,9, };
-	v = move(vec);
-	vec.print();
-//	vec.erase(it, it2);
-	cout << *it << endl;
-	v.print();
+	LinkedList<string> l;
+//	LinkedList<int> li;
+//	LinkedList<int>::Iterator i = l.begin();
+	l.append("nacs");
+	l.append("aoih");
+	l.prepend(NULL);
+	l.append("gqtdyu");
+
+	l.print();
+
+
+
+	list<string> std_l;
+	std_l.push_back("nowy");
+	list<string>::iterator  it_s = std_l.end();
+
+//	cout << *it_s << endl << *(--(std_l.end())) << endl;
+//	std_l.end()++;
+
+
+
+
 	
 	return 0;
 }
