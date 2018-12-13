@@ -61,29 +61,22 @@ public:
 int main(int argc, char** argv)
 {
 
-	LinkedList<string> l;
-//	LinkedList<int> li;
-//	LinkedList<int>::Iterator i = l.begin();
-	l.append("nacs");
-	l.append("aoih");
-	l.prepend(NULL);
-	l.append("gqtdyu");
+//	LinkedList<int> l = {2,3};
 
-	l.print();
-
-
-
-	list<string> std_l;
-	std_l.push_back("nowy");
-	list<string>::iterator  it_s = std_l.end();
-
-//	cout << *it_s << endl << *(--(std_l.end())) << endl;
-//	std_l.end()++;
-
-
-
-
+	LinkedList<int> l2 = { 1,2,3,4,5,6,7,8,9 };
+	LinkedList<int>::iterator it = l2.end();
+	it--;
+	l2.insert(it, 77);
+	l2.print();
+	cout << endl;
+	l2.erase(l2.begin());
+	l2.print();
 	
+
+
+
+
+
 	return 0;
 }
 

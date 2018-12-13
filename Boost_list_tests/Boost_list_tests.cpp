@@ -148,8 +148,8 @@ template <typename T>
 void thenCollectionContainsValues(const LinearCollection<T>& collection,
 	std::initializer_list<int> expected)
 {
-	BOOST_CHECK_EQUAL_COLLECTIONS(begin(collection), end(collection),
-		begin(expected), end(expected));
+	BOOST_CHECK_EQUAL_COLLECTIONS(begin(collection), (end(collection)),
+		begin(expected), (end(expected)));
 }
 
 template <typename T>
