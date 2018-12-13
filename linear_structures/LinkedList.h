@@ -6,9 +6,11 @@
 #include <initializer_list>
 #include <stdexcept>
 
+
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
 #include <crtdbg.h>
+//#include <Windows.h>
 
 #ifdef _DEBUG
 #define DBG_NEW new ( _NORMAL_BLOCK , __FILE__ , __LINE__ )
@@ -118,8 +120,30 @@ namespace aisdi
 
 		LinkedList(LinkedList&& other)
 		{
+				first = DBG_NEW Node;
+			node_ptr tmp = first;
+			node_ptr other_tmp = other.first;
+			Node *prev = nullptr;
+			for (; other_tmp != other.last; tmp = tmp->next, other_tmp = other_tmp->next)
+			{
+				tmp->data = other_tmp->data;
+				tmp->next = DBG_NEW Node;
+				tmp->previous = prev;
+				prev = tmp;
+			}
+			tmp->data = other_tmp->data;
+			tmp->previous = prev;
+			tmp->next = DBG_NEW Node;
+			tmp->next->previous = tmp;
+			tmp->next->next = nullptr;
+	//		tmp->next->data = NULL;
+			last = tmp;
+			count = other.getSize();
+
+			other.destroy();
+
 			(void)other;
-			throw std::runtime_error("TODO");
+		//	throw std::runtime_error("TODO");
 		}
 
 		~LinkedList()
@@ -145,6 +169,7 @@ namespace aisdi
 			first = nullptr;
 			last = nullptr;
 			count = 0;
+		//	OutputDebugStringW(L"***RAPORT\n");
 			_CrtDumpMemoryLeaks();
 		}
 
@@ -185,12 +210,69 @@ namespace aisdi
 
 		LinkedList& operator=(const LinkedList& other)
 		{
+			if (other.isEmpty())
+			{
+				this->destroy();
+				return *this;
+			}
+			if (other.begin() == this->begin())
+				return *this;
+			this->destroy();
+			first = DBG_NEW Node;
+			node_ptr tmp = first;
+			node_ptr other_tmp = other.first;
+			Node *prev = nullptr;
+			for (; other_tmp != other.last; tmp = tmp->next, other_tmp = other_tmp->next)
+			{
+				tmp->data = other_tmp->data;
+				tmp->next = DBG_NEW Node;
+				tmp->previous = prev;
+				prev = tmp;
+			}
+			tmp->data = other_tmp->data;
+			tmp->previous = prev;
+			tmp->next = DBG_NEW Node;
+			tmp->next->previous = tmp;
+			tmp->next->next = nullptr;
+			//		tmp->next->data = NULL;
+			last = tmp;
+			count = other.getSize();
+			return *this;
 			(void)other;
-			throw std::runtime_error("TODO");
+		//	throw std::runtime_error("TODO");
 		}
 
 		LinkedList& operator=(LinkedList&& other)
 		{
+			if (other.isEmpty())
+			{
+				this->destroy();
+				return *this;
+			}
+			if (other.begin() == this->begin())
+				return *this;
+			this->destroy();
+			first = DBG_NEW Node;
+			node_ptr tmp = first;
+			node_ptr other_tmp = other.first;
+			Node *prev = nullptr;
+			for (; other_tmp != other.last; tmp = tmp->next, other_tmp = other_tmp->next)
+			{
+				tmp->data = other_tmp->data;
+				tmp->next = DBG_NEW Node;
+				tmp->previous = prev;
+				prev = tmp;
+			}
+			tmp->data = other_tmp->data;
+			tmp->previous = prev;
+			tmp->next = DBG_NEW Node;
+			tmp->next->previous = tmp;
+			tmp->next->next = nullptr;
+			//		tmp->next->data = NULL;
+			last = tmp;
+			count = other.getSize();
+			other.destroy();
+			return *this;
 			(void)other;
 			throw std::runtime_error("TODO");
 		}
@@ -381,6 +463,46 @@ namespace aisdi
 
 		void erase(const const_iterator& firstIncluded, const const_iterator& lastExcluded)
 		{
+			if (lastExcluded == this->cend() && firstIncluded == this->cbegin())
+			{
+				this->destroy();
+				return;
+			}
+			if (lastExcluded == this->cend())
+			{
+				iterator it = firstIncluded;
+				node_ptr tmp = it.getNode();
+				last = (tmp->previous);
+			}
+
+			if (firstIncluded == this->cbegin())
+			{
+				iterator it = lastExcluded;
+				first = it.getNode();
+
+			}
+			else
+			{
+				iterator left = firstIncluded;
+				iterator right = lastExcluded;
+				left.getNode()->previous->next = right.getNode();
+				right.getNode()->previous = left.getNode()->previous;
+			}
+			iterator left = firstIncluded;
+			iterator right = lastExcluded;
+			node_ptr tmp = nullptr;
+			size_t i = 0;
+			while (left != right)
+			{
+				std::cout << *left << std::endl;
+				tmp = left.getNode();
+				++left;
+				delete tmp;
+				++i;
+			}
+
+			count -= i;
+			return; 
 			(void)firstIncluded;
 			(void)lastExcluded;
 			throw std::runtime_error("TODO");

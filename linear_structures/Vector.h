@@ -104,7 +104,7 @@ namespace aisdi
 		{
 			if ((*this).begin() == other.begin())
 				return *this;
-			std::cout << "single reference\n";
+		//	std::cout << "single reference\n";
 			v_buffer = new object_type[other.v_capacity];
 			v_capacity = other.v_capacity;
 			for (size_t i = 0; i < other.object_count; ++i)
